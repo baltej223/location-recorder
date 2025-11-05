@@ -11,19 +11,41 @@ export default function Home() {
   const [locationName, setLocationName] = React.useState("");
   const [coords, setCoords] = React.useState(null);
 
-  const recordLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+const recordLocation = async () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
+
+  try {
+    // Check permission state first
+    const permission = await navigator.permissions.query({ name: "geolocation" });
+
+    if (permission.state === "denied") {
+      alert("Location access has been denied. Please enable it from browser settings.");
       return;
     }
+
+    // This will trigger the permission prompt if not granted yet
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setCoords({ latitude, longitude });
       },
-      (err) => alert("Failed to get location: " + err.message)
+      (err) => {
+        alert("Failed to get location: " + err.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
     );
-  };
+  } catch (err) {
+    alert("Error checking geolocation permission: " + err.message);
+  }
+};
+
 
   const handleSubmit = async () => {
     if (!coords || !locationName.trim()) {

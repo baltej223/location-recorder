@@ -11,40 +11,45 @@ export default function Home() {
   const [locationName, setLocationName] = React.useState("");
   const [coords, setCoords] = React.useState(null);
 
-const recordLocation = async () => {
+const recordLocation = () => {
   if (!navigator.geolocation) {
     alert("Geolocation is not supported by your browser.");
     return;
   }
 
-  try {
-    // Check permission state first
-    const permission = await navigator.permissions.query({ name: "geolocation" });
-
-    if (permission.state === "denied") {
-      alert("Location access has been denied. Please enable it from browser settings.");
-      return;
-    }
-
-    // This will trigger the permission prompt if not granted yet
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setCoords({ latitude, longitude });
-      },
-      (err) => {
-        alert("Failed to get location: " + err.message);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+  navigator.permissions
+    .query({ name: "geolocation" })
+    .then((permission) => {
+      if (permission.state === "denied") {
+        alert("Please enable location access in your browser settings.");
+        return;
       }
-    );
-  } catch (err) {
-    alert("Error checking geolocation permission: " + err.message);
-  }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setCoords({ latitude, longitude });
+        },
+        (err) => {
+          alert("Failed to get location: " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    })
+    .catch(() => {
+      // Fallback: directly try if Permissions API not supported
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setCoords({ latitude, longitude });
+        },
+        (err) => {
+          alert("Failed to get location: " + err.message);
+        }
+      );
+    });
 };
+
 
 
   const handleSubmit = async () => {
